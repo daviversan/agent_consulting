@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+langchain
+langchain-community
+chromadb
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+python-dotenv
+pydantic
+langchain-google-community
+langchain-google-genai
+pypdf
+python-docx
+unstructured
+pytesseract
+pycryptodome
