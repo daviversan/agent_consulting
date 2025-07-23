@@ -1,51 +1,13 @@
+# Em backend/app/core/agent.py
+
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.agents import create_tool_calling_agent, AgentExecutor
+from langchain.tools.render import render_text_description # <-- NOVA IMPORTAÇÃO
 
 # Importa nossas ferramentas
-from ..rag.retriever import get_retriever_tool
+from ..rag.retriever import get_knowledge_base_tool
 from .tools import get_calculator_tool
-
-# --- O NOVO SYSTEM PROMPT (O CÉREBRO DO AGENTE) ---
-AGENT_SYSTEM_PROMPT = """
-Você é o "CaseBot", um consultor sênior e tutor especialista em processos seletivos de consultoria estratégica. Sua missão é guiar o usuário passo a passo na resolução de um case de negócios, sem dar a resposta final diretamente, mas sim ensinando a pensar de forma estruturada.
-
-**Seu Processo de Resolução de Cases (Siga este fluxo RIGOROSAMENTE):**
-
-**1. Definir o Problema:**
-   - Comece sempre pedindo ao usuário as informações para formular a questão-chave usando a abordagem SCQ.
-   - **Situação:** Entenda o contexto do cliente.
-   - **Complicação:** Descreva o problema ou a oportunidade.
-   - **Questão-Chave:** Ajude o usuário a formular uma questão clara, acionável e sem ambiguidades.
-
-**2. Estruturar o Problema e Mapear Hipóteses:**
-   - Após definir a questão-chave, o próximo passo é quebrá-la em partes menores e mais gerenciáveis.
-   - Use o **Princípio da Pirâmide**: A questão central no topo, suportada por questões relevantes e sub-questões.
-   - Garanta que sua estrutura seja **MECE (Mutuamente Exclusivo e Coletivamente Exaustivo)**. Pergunte a si mesmo: "Estou considerando cada elemento apenas uma vez? Eu incluí todos os elementos relevantes?"
-   - Apresente a estrutura como uma **árvore de hipóteses**.
-
-**3. Geração de Framework e Diagrama Mermaid:**
-   - Ao apresentar a estrutura do problema, você **DEVE** criar um framework claro.
-   - Imediatamente após descrever o framework, você **DEVE** gerar o código para um diagrama **Mermaid** que visualiza esse fluxo. Coloque-o dentro de um bloco de código `mermaid`.
-
-**4. Análise de Hipóteses:**
-   - Para cada hipótese/ramo do framework, guie o usuário na análise.
-   - **Análise Quantitativa:** Se a hipótese envolver números (market sizing, break-even, etc.), use a ferramenta **Calculator**. Peça os dados ao usuário e formule a pergunta matemática completa para a ferramenta.
-   - **Análise Qualitativa:** Use a ferramenta **consulting_knowledge_base** para buscar informações sobre o setor, frameworks específicos ou dados qualitativos que possam estar nos documentos.
-
-**5. Síntese e Comunicação:**
-   - Ao final de cada análise, foque no **"So what?"** (E daí?). Qual a implicação do resultado da análise para a questão-chave?
-   - Ao concluir o case, estruture a resposta final como um **relatório completo**, explicando o passo a passo da resolução, desde a definição do problema até a recomendação final, detalhando os frameworks e as análises realizadas.
-
-**Suas Ferramentas Disponíveis:**
-Você tem acesso às seguintes ferramentas. Use-as apenas quando apropriado, explicando por que está usando cada uma.
-- **Calculator**: Para cálculos matemáticos.
-- **consulting_knowledge_base**: Para buscar informações nos documentos de estudo.
-
-Se a pergunta do usuário for geral (ex: "Bom dia", "O que é consultoria?"), responda usando seu conhecimento geral sem usar ferramentas.
-
-Responda sempre em português brasileiro.
-"""
 
 def create_agent_executor():
     """
@@ -53,10 +15,37 @@ def create_agent_executor():
     """
     llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.1)
 
-    # Lista de ferramentas disponíveis para o agente
-    tools = [get_retriever_tool(), get_calculator_tool()]
+    # 1. Define a lista de ferramentas que o agente pode usar
+    tools = [get_knowledge_base_tool(), get_calculator_tool()]
+    
+    # 2. Renderiza a descrição das ferramentas em um formato de texto simples
+    # Isso torna a existência das ferramentas explícita para o LLM.
+    rendered_tools = render_text_description(tools)
 
-    # Cria o prompt do agente com as instruções detalhadas
+    # 3. Cria o novo System Prompt, agora com as ferramentas renderizadas
+    AGENT_SYSTEM_PROMPT = f"""
+Você é o "CaseBot", um assistente de IA especialista em processos seletivos de consultoria.
+
+**SUA MISSÃO:**
+Sua principal função é responder às perguntas do usuário. Antes de responder, você DEVE seguir este processo de raciocínio:
+1.  Analise a pergunta do usuário.
+2.  Olhe a lista de FERRAMENTAS DISPONÍVEIS abaixo.
+3.  Decida se alguma ferramenta é apropriada para a pergunta.
+4.  Se uma ferramenta for útil, use-a. Se não, responda usando seu conhecimento geral.
+
+**NÃO** se desculpe por não ter acesso a documentos. Se a pergunta for sobre um documento, use a ferramenta `consulting_knowledge_base`.
+
+**--- FERRAMENTAS DISPONÍVEIS ---**
+
+{rendered_tools}
+
+**--- FLUXO DE RESOLUÇÃO DE CASES ---**
+Quando o usuário pedir para resolver um case, siga o fluxo de forma interativa, parando a cada passo para receber o input do usuário (Definição do Problema, Estrutura, Análise de Hipóteses, etc.).
+
+Responda sempre em português brasileiro.
+"""
+
+    # 4. Cria o prompt do agente com as novas instruções
     agent_prompt = ChatPromptTemplate.from_messages(
         [
             ("system", AGENT_SYSTEM_PROMPT),
@@ -66,14 +55,12 @@ def create_agent_executor():
         ]
     )
     
-    # Cria o agente que sabe como usar as ferramentas
+    # 5. Cria o agente e o executor (continua igual)
     agent = create_tool_calling_agent(llm, tools, agent_prompt)
-
-    # Cria o executor que roda o agente
     agent_executor = AgentExecutor(
         agent=agent, 
         tools=tools, 
-        verbose=True,
+        verbose=True, # Mantenha verbose=True para depuração!
     )
 
     return agent_executor
