@@ -3,7 +3,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 
 # Importa nossas ferramentas
-from ..rag.retriever import get_retriever_tool
+from ..rag.retriever import get_knowledge_base_tool 
 from .tools import get_calculator_tool
 
 # --- O NOVO SYSTEM PROMPT (O CÉREBRO DO AGENTE) ---
@@ -63,7 +63,7 @@ def create_agent_executor():
     llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.1)
 
     # Lista de ferramentas disponíveis para o agente
-    tools = [get_retriever_tool(), get_calculator_tool()]
+    tools = [get_knowledge_base_tool(), get_calculator_tool()]
 
     # Cria o prompt do agente com as instruções detalhadas
     agent_prompt = ChatPromptTemplate.from_messages(
