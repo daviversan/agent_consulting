@@ -15,6 +15,17 @@ def get_drive_service():
     token_path = os.path.join(backend_dir, "token.json")
     credentials_path = os.path.join(backend_dir, "credentials.json")
 
+    creds_json_content = os.getenv("CREDENTIALS_JSON_CONTENT")
+    token_json_content = os.getenv("TOKEN_JSON_CONTENT")
+
+    if creds_json_content:
+        with open(credentials_path, "w") as f:
+            f.write(creds_json_content)
+
+    if token_json_content:
+        with open(token_path, "w") as f:
+            f.write(token_json_content)
+
     if os.path.exists(token_path):
         creds = Credentials.from_authorized_user_file(token_path, SCOPES)
 

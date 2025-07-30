@@ -3,7 +3,7 @@ import requests
 
 
 # URL do endpoint da nossa API FastAPI
-BACKEND_URL = "http://127.0.0.1:8000/api/v1/chat"
+BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000/api/v1/chat")
 
 # Título da Aplicação
 st.title("🤖 CaseBot - Seu Tutor de Consultoria")

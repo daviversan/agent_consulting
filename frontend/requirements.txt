@@ -1,8 +1,9 @@
-langchain
-langchain-community
-langchain-google-genai
-langchain-core
-faiss-cpu
+# Interface e Comunicação
 streamlit
 requests
+
+# Processamento de Documentos (Upload)
+langchain-community
+langchain-google-genai
+faiss-cpu
 pypdf

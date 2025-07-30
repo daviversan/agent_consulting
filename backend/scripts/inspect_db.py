@@ -3,7 +3,7 @@ import os
 
 # Define o caminho para a pasta do banco de dados
 # Lembre-se que este script está em 'scripts/', então usamos '../' para voltar para a raiz do 'backend'
-CHROMA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'storage', 'vector_db'))
+CHROMA_PATH = os.getenv("RENDER_DISK_PATH", "storage/vector_db")
 
 def main():
     """

@@ -19,7 +19,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 load_dotenv()
 
 # --- Configurações ---
-CHROMA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "storage", "vector_db")
+CHROMA_PATH = os.getenv("RENDER_DISK_PATH", "storage/vector_db")
 GDRIVE_FOLDER_ID = os.getenv("GDRIVE_FOLDER_ID")
 
 def download_and_load_drive_files(service, folder_id):

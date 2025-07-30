@@ -6,7 +6,7 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain.agents import Tool
 
 load_dotenv()
-CHROMA_PATH = "storage/vector_db"
+CHROMA_PATH = os.getenv("RENDER_DISK_PATH", "storage/vector_db")
 
 def get_retriever():
     """
