@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+import os
 
 
 # URL do endpoint da nossa API FastAPI
